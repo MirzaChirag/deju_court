@@ -77,6 +77,13 @@ def _db() -> sqlite3.Connection:
     return connect(row_factory=sqlite3.Row)
 
 
+def _db_error_page(e: Exception) -> tuple[str, int]:
+    return (
+        f"<h1>Error</h1><pre>{str(e)}</pre><p>DB_PATH: {DB_PATH}</p>",
+        500,
+    )
+
+
 def get_filter_data() -> dict[str, list]:
     global _filter_cache
     if _filter_cache is None:
@@ -293,42 +300,45 @@ def _render_index(**kw):
 
 @app.route("/")
 def index():
-    q = request.args.get("q", "").strip()
-    court = request.args.get("court", "").strip()
-    year = request.args.get("year", "").strip()
-    result = request.args.get("result", "").strip()
     try:
-        page = int(request.args.get("page", "1"))
-    except ValueError:
-        page = 1
+        q = request.args.get("q", "").strip()
+        court = request.args.get("court", "").strip()
+        year = request.args.get("year", "").strip()
+        result = request.args.get("result", "").strip()
+        try:
+            page = int(request.args.get("page", "1"))
+        except ValueError:
+            page = 1
 
-    results: list[dict] = []
-    total = 0
-    prev_url = None
-    next_url = None
-    total_pages = 1
+        results: list[dict] = []
+        total = 0
+        prev_url = None
+        next_url = None
+        total_pages = 1
 
-    if q:
-        results, total, page = search(
-            q, court=court, year=year, result=result, page=page
+        if q:
+            results, total, page = search(
+                q, court=court, year=year, result=result, page=page
+            )
+            prev_url, next_url, total_pages = _pagination_urls(
+                q, court, year, result, page, total
+            )
+
+        return _render_index(
+            q=q,
+            court=court,
+            year=year,
+            result=result,
+            page=page,
+            results=results,
+            total_count=total,
+            prev_url=prev_url,
+            next_url=next_url,
+            total_pages=total_pages,
+            per_page=PER_PAGE,
         )
-        prev_url, next_url, total_pages = _pagination_urls(
-            q, court, year, result, page, total
-        )
-
-    return _render_index(
-        q=q,
-        court=court,
-        year=year,
-        result=result,
-        page=page,
-        results=results,
-        total_count=total,
-        prev_url=prev_url,
-        next_url=next_url,
-        total_pages=total_pages,
-        per_page=PER_PAGE,
-    )
+    except Exception as e:
+        return _db_error_page(e)
 
 
 @app.route("/search")
@@ -338,14 +348,17 @@ def search_route():
 
 @app.route("/act/<int:decision_id>")
 def act_detail(decision_id: int):
-    conn = _db()
     try:
-        row = conn.execute(
-            "SELECT decision_id, case_number, date, court_name, full_text FROM court_acts WHERE decision_id = ?",
-            (decision_id,),
-        ).fetchone()
-    finally:
-        conn.close()
+        conn = _db()
+        try:
+            row = conn.execute(
+                "SELECT decision_id, case_number, date, court_name, full_text FROM court_acts WHERE decision_id = ?",
+                (decision_id,),
+            ).fetchone()
+        finally:
+            conn.close()
+    except Exception as e:
+        return _db_error_page(e)
     if row is None:
         abort(404)
     highlight_q = request.args.get("q", "")
