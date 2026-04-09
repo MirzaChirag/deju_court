@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dejured · Məhkəmə Aktlarının Axtarışı</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --red: #D62B2B;
+      --black: #111111;
+      --text: #1A1A1A;
+      --text-secondary: #666666;
+      --bg: #F8F8F8;
+      --white: #FFFFFF;
+      --border: #E5E5E5;
+      --highlight: #FFF3F3;
+      --mark-bg: #FECDD3;
+      --mark-text: #9B1C1C;
+    }
+
+    * { box-sizing: border-box; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Inter", system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+    }
+
+    .site-header {
+      background: var(--white);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .site-header__inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0.9rem 1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    .header-stat {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    .hero {
+      background: var(--white);
+      padding: clamp(48px, 10vw, 80px) 1.25rem;
+      text-align: center;
+    }
+
+    .hero__inner {
+      max-width: 720px;
+      margin: 0 auto;
+    }
+
+    .search-form {
+      display: flex;
+      max-width: 560px;
+      margin: 0 auto 0.85rem;
+      border-radius: 24px;
+      overflow: visible;
+    }
+
+    .search-form:focus-within {
+      filter: drop-shadow(0 0 10px rgba(214, 43, 43, 0.12));
+    }
+
+    .search-form input[type="search"] {
+      flex: 1;
+      min-width: 0;
+      padding: 0.9rem 1.15rem;
+      border: 1.5px solid var(--border);
+      border-right: none;
+      border-radius: 24px 0 0 24px;
+      font-size: 1rem;
+      font-family: inherit;
+      background: var(--white);
+      color: var(--text);
+    }
+
+    .search-form input[type="search"]::placeholder {
+      color: #999;
+    }
+
+    .search-form input[type="search"]:focus {
+      outline: none;
+      border-color: var(--red);
+      border-right: none;
+      position: relative;
+      z-index: 1;
+    }
+
+    .search-form:focus-within input[type="search"] {
+      border-color: var(--red);
+    }
+
+    .search-form:focus-within button[type="submit"] {
+      border-color: var(--red);
+    }
+
+    .search-form button[type="submit"] {
+      padding: 0.9rem 1.6rem;
+      background: var(--red);
+      color: var(--white);
+      border: 1.5px solid var(--red);
+      border-radius: 0 24px 24px 0;
+      font-size: 1rem;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .search-form button[type="submit"]:hover {
+      filter: brightness(1.05);
+    }
+
+    @media (max-width: 520px) {
+      .search-form {
+        flex-direction: column;
+        border-radius: 24px;
+      }
+      .search-form input[type="search"] {
+        border-right: 1.5px solid var(--border);
+        border-radius: 24px 24px 0 0;
+        border-bottom: none;
+      }
+      .search-form input[type="search"]:focus {
+        border-right-color: var(--red);
+        border-bottom: none;
+      }
+      .search-form:focus-within input[type="search"] {
+        border-right-color: var(--red);
+      }
+      .search-form button[type="submit"] {
+        border-radius: 0 0 24px 24px;
+        width: 100%;
+      }
+    }
+
+    .filters-row {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+      gap: 0.5rem;
+      max-width: 720px;
+      margin: 0 auto 1rem;
+    }
+
+    .filters-row select {
+      font-family: inherit;
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 0.4rem 0.85rem;
+      cursor: pointer;
+      min-width: 0;
+      max-width: 100%;
+    }
+
+    .filters-row select:focus {
+      outline: none;
+      border-color: var(--red);
+    }
+
+    .suggest-tags {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 0.5rem;
+      margin: 0 0 0.75rem;
+      padding: 0;
+      list-style: none;
+    }
+
+    .suggest-tags button {
+      font-family: inherit;
+      font-size: 0.8125rem;
+      color: var(--text-secondary);
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.35rem 0.75rem;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+    }
+
+    .suggest-tags button:hover {
+      background: var(--highlight);
+      border-color: rgba(214, 43, 43, 0.35);
+      color: var(--text);
+    }
+
+    .history-block {
+      max-width: 560px;
+      margin: 0 auto 0.5rem;
+      text-align: left;
+      display: none;
+    }
+
+    .history-block.is-visible {
+      display: block;
+    }
+
+    .history-label {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      margin-bottom: 0.35rem;
+    }
+
+    .history-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      align-items: center;
+    }
+
+    .history-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-family: inherit;
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 0.25rem 0.5rem 0.25rem 0.65rem;
+      cursor: pointer;
+    }
+
+    .history-tag button.remove {
+      border: none;
+      background: transparent;
+      color: var(--text-secondary);
+      font-size: 1rem;
+      line-height: 1;
+      padding: 0 0.15rem;
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    .history-tag button.remove:hover {
+      color: var(--red);
+    }
+
+    .results-section {
+      background: var(--bg);
+      padding: 2rem 1.25rem 3.5rem;
+      flex: 1;
+    }
+
+    .results-inner {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .results-meta {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      margin: 0 0 1rem;
+      font-weight: 500;
+    }
+
+    .pagination {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      align-items: center;
+      margin-bottom: 1.25rem;
+    }
+
+    .pagination a {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--red);
+      text-decoration: none;
+      padding: 0.45rem 0.9rem;
+      border: 1px solid var(--red);
+      border-radius: 6px;
+    }
+
+    .pagination a:hover {
+      background: var(--highlight);
+    }
+
+    .pagination a[aria-disabled="true"] {
+      opacity: 0.4;
+      pointer-events: none;
+    }
+
+    .pagination .page-info {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+    }
+
+    .card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      border-left: 3px solid var(--red);
+      padding: 1.25rem 1.35rem;
+      margin-bottom: 1rem;
+      transition: box-shadow 0.2s ease;
+      animation: fadeIn 0.3s ease forwards;
+    }
+
+    .card:hover {
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+    }
+
+    .main > article.card:nth-of-type(1) { animation-delay: 0s; }
+    .main > article.card:nth-of-type(2) { animation-delay: 0.04s; }
+    .main > article.card:nth-of-type(3) { animation-delay: 0.08s; }
+    .main > article.card:nth-of-type(4) { animation-delay: 0.12s; }
+    .main > article.card:nth-of-type(5) { animation-delay: 0.16s; }
+    .main > article.card:nth-of-type(n+6) { animation-delay: 0.2s; }
+
+    .card-meta {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-bottom: 0.85rem;
+      line-height: 1.4;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    @media (max-width: 520px) {
+      .card-meta {
+        white-space: normal;
+      }
+    }
+
+    .card-snippet {
+      font-size: 15px;
+      color: var(--text);
+      line-height: 1.6;
+      margin-bottom: 1rem;
+      word-break: break-word;
+    }
+
+    .card-snippet mark {
+      background: var(--mark-bg);
+      color: var(--mark-text);
+      padding: 0.06em 0.12em;
+      border-radius: 3px;
+    }
+
+    .card a.more {
+      font-size: 14px;
+      color: var(--red);
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .card a.more:hover {
+      opacity: 0.88;
+    }
+
+    .empty {
+      text-align: center;
+      color: var(--text-secondary);
+      margin: 2rem 0;
+      font-size: 0.95rem;
+    }
+
+    .page {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .site-footer {
+      padding: 1.5rem 1.25rem;
+      text-align: center;
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      background: var(--white);
+      border-top: 1px solid var(--border);
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="site-header">
+      <div class="site-header__inner">
+        <a href="{{ url_for('index') }}" style="display:flex; align-items:center; gap:12px; text-decoration:none;">
+          <img src="https://static.tildacdn.one/tild6532-6234-4432-a130-643564336663/logo_dj_red.svg"
+               height="32" alt="Dejured">
+          <span style="color:#666; font-size:14px; font-weight:500;">Məhkəmə aktları</span>
+        </a>
+        <span class="header-stat">27&nbsp;635 akt</span>
+      </div>
+    </header>
+
+    <section class="hero">
+      <div class="hero__inner">
+        <form id="search-form" class="hero-form" action="{{ url_for('search_route') }}" method="get">
+          <input type="hidden" name="page" value="1">
+          <div class="search-form">
+            <input type="search" id="search-q" name="q" value="{{ q }}" placeholder="Axtarış…" autocomplete="off" autofocus>
+            <button type="submit">Axtar</button>
+          </div>
+          <div class="filters-row">
+            <select name="court" aria-label="Məhkəmə">
+              <option value="">Bütün məhkəmələr</option>
+              {% for c in courts %}
+              <option value="{{ c }}" {% if court == c %}selected{% endif %}>{{ c }}</option>
+              {% endfor %}
+            </select>
+            <select name="year" aria-label="İl">
+              <option value="">Bütün illər</option>
+              {% for y in years %}
+              <option value="{{ y }}" {% if year == y %}selected{% endif %}>{{ y }}</option>
+              {% endfor %}
+            </select>
+            <select name="result" aria-label="Nəticə növü">
+              {% for val, label in result_types %}
+              <option value="{{ val }}" {% if result == val %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </form>
+        <div id="history-block" class="history-block">
+          <div class="history-label">Son axtarışlar:</div>
+          <div id="history-tags" class="history-tags"></div>
+        </div>
+        <ul class="suggest-tags" aria-label="Nümunə sorğular">
+          <li><button type="button" class="suggest-btn" data-q="icarə müqaviləsi">icarə müqaviləsi</button></li>
+          <li><button type="button" class="suggest-btn" data-q="əmək mübahisəsi">əmək mübahisəsi</button></li>
+          <li><button type="button" class="suggest-btn" data-q="borc">borc</button></li>
+          <li><button type="button" class="suggest-btn" data-q="mülkiyyət">mülkiyyət</button></li>
+        </ul>
+      </div>
+    </section>
+
+    {% if q %}
+    <section class="results-section">
+      <div class="results-inner">
+        <main class="main">
+          <p class="results-meta">{{ total_count }} nəticə tapıldı</p>
+
+          {% if total_count > 0 %}
+          <nav class="pagination" aria-label="Səhifələmə">
+            {% if prev_url %}
+            <a href="{{ prev_url }}">Əvvəlki</a>
+            {% else %}
+            <a href="#" aria-disabled="true">Əvvəlki</a>
+            {% endif %}
+            {% if next_url %}
+            <a href="{{ next_url }}">Növbəti</a>
+            {% else %}
+            <a href="#" aria-disabled="true">Növbəti</a>
+            {% endif %}
+            <span class="page-info">Səhifə {{ page }} / {{ total_pages }}</span>
+          </nav>
+          {% endif %}
+
+          {% if not results and total_count == 0 %}
+          <p class="empty">Nəticə tapılmadı.</p>
+          {% endif %}
+
+          {% for r in results %}
+          <article class="card">
+            <div class="card-meta">
+              {{ r.case_number }}{% if r.date %} · {{ r.date | format_date }}{% endif %}{% if r.court_name %} · {{ r.court_name }}{% endif %}
+            </div>
+            <div class="card-snippet">{{ r.snippet_html|safe }}</div>
+            <a class="more" href="{{ url_for('act_detail', decision_id=r.decision_id) }}?q={{ q | urlencode }}">Ətraflı oxu →</a>
+          </article>
+          {% endfor %}
+        </main>
+      </div>
+    </section>
+    {% endif %}
+
+    <footer class="site-footer">
+      © 2026 Dejured · Bütün hüquqlar qorunur
+    </footer>
+  </div>
+
+  <script>
+(function () {
+  var form = document.getElementById('search-form');
+  var input = document.getElementById('search-q');
+  var historyBlock = document.getElementById('history-block');
+  var historyTags = document.getElementById('history-tags');
+  var STORAGE_KEY = 'searchHistory';
+
+  function readHistory() {
+    try {
+      return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function saveHistory(arr) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(arr.slice(0, 5)));
+  }
+
+  function renderHistory() {
+    var q = (input.value || '').trim();
+    var items = readHistory();
+    historyTags.innerHTML = '';
+    if (q || !items.length) {
+      historyBlock.classList.remove('is-visible');
+      return;
+    }
+    historyBlock.classList.add('is-visible');
+    items.forEach(function (term) {
+      var wrap = document.createElement('span');
+      wrap.className = 'history-tag';
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.textContent = term;
+      btn.addEventListener('click', function () {
+        input.value = term;
+        form.querySelector('input[name="page"]').value = '1';
+        form.submit();
+      });
+      var rm = document.createElement('button');
+      rm.type = 'button';
+      rm.className = 'remove';
+      rm.innerHTML = '×';
+      rm.setAttribute('aria-label', 'Sil');
+      rm.addEventListener('click', function (e) {
+        e.stopPropagation();
+        var h = readHistory().filter(function (x) { return x !== term; });
+        saveHistory(h);
+        renderHistory();
+      });
+      wrap.appendChild(btn);
+      wrap.appendChild(rm);
+      historyTags.appendChild(wrap);
+    });
+  }
+
+  input.addEventListener('input', renderHistory);
+  input.addEventListener('focus', renderHistory);
+
+  document.querySelectorAll('.suggest-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      input.value = btn.getAttribute('data-q');
+      form.querySelector('input[name="page"]').value = '1';
+      form.submit();
+    });
+  });
+
+  var params = new URLSearchParams(window.location.search);
+  var urlQ = params.get('q');
+  if (urlQ && urlQ.trim()) {
+    var history = readHistory();
+    if (history.indexOf(urlQ) === -1) {
+      history.unshift(urlQ);
+    }
+    saveHistory(history);
+  }
+
+  renderHistory();
+})();
+  </script>
+</body>
+</html>

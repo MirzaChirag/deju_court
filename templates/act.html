@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dejured · Akt №{{ decision_id }}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --red: #D62B2B;
+      --black: #111111;
+      --text: #1A1A1A;
+      --text-secondary: #666666;
+      --bg: #F8F8F8;
+      --white: #FFFFFF;
+      --border: #E5E5E5;
+      --highlight: #FFF3F3;
+      --mark-bg: #FECDD3;
+      --mark-text: #9B1C1C;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Inter", system-ui, -apple-system, sans-serif;
+      background: var(--white);
+      color: var(--text);
+      line-height: 1.5;
+    }
+
+    .site-header {
+      background: var(--white);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .site-header__inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0.9rem 1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    .header-stat {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    .wrap {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 1.25rem 1.25rem 3rem;
+    }
+
+    .back {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.55rem 1.1rem;
+      border: 1.5px solid var(--red);
+      border-radius: 6px;
+      color: var(--red);
+      background: transparent;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.875rem;
+      font-family: inherit;
+      margin-bottom: 1.5rem;
+    }
+
+    .back:hover {
+      background: var(--highlight);
+    }
+
+    .meta-panel {
+      background: var(--bg);
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 2rem;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.25rem 1.5rem;
+    }
+
+    @media (max-width: 720px) {
+      .meta-panel {
+        grid-template-columns: 1fr;
+        gap: 1.25rem;
+      }
+    }
+
+    .meta-item__label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      margin-bottom: 0.4rem;
+    }
+
+    .meta-item__value {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--black);
+      line-height: 1.35;
+      word-break: break-word;
+    }
+
+    .act-article {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    #act-text.act-body {
+      background: var(--white);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: clamp(1.25rem, 4vw, 2rem);
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 16px;
+      line-height: 1.8;
+    }
+
+    #act-text.act-body mark,
+    #act-text mark {
+      background: var(--mark-bg);
+      color: var(--mark-text);
+      padding: 0.05em 0.15em;
+      border-radius: 3px;
+    }
+
+    .site-footer {
+      margin-top: 3rem;
+      padding: 1.5rem 1.25rem;
+      text-align: center;
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      border-top: 1px solid var(--border);
+    }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="site-header__inner">
+      <a href="{{ url_for('index') }}" style="display:flex; align-items:center; gap:12px; text-decoration:none;">
+        <img src="https://static.tildacdn.one/tild6532-6234-4432-a130-643564336663/logo_dj_red.svg"
+             height="32" alt="Dejured">
+        <span style="color:#666; font-size:14px; font-weight:500;">Məhkəmə aktları</span>
+      </a>
+      <span class="header-stat">27&nbsp;635 akt</span>
+    </div>
+  </header>
+
+  <div class="wrap">
+    <a class="back" href="{% if q %}{{ url_for('index', q=q) }}{% else %}{{ url_for('index') }}{% endif %}">← Axtarışa qayıt</a>
+
+    <div class="meta-panel">
+      <div class="meta-item">
+        <div class="meta-item__label">IŞ NÖMRƏSİ</div>
+        <div class="meta-item__value">{{ case_number or '—' }}</div>
+      </div>
+      <div class="meta-item">
+        <div class="meta-item__label">TARİX</div>
+        <div class="meta-item__value">{% if date %}{{ date | format_date }}{% else %}—{% endif %}</div>
+      </div>
+      <div class="meta-item">
+        <div class="meta-item__label">MƏHKƏMƏ</div>
+        <div class="meta-item__value">{{ court_name or '—' }}</div>
+      </div>
+    </div>
+
+    <article class="act-article">
+      <div id="act-text" class="act-body">{{ full_text | e }}</div>
+    </article>
+
+    <footer class="site-footer">
+      © 2026 Dejured · Bütün hüquqlar qorunur
+    </footer>
+  </div>
+
+<script>
+var MARK_STYLE = 'background:#FECDD3;color:#9B1C1C;padding:0.05em 0.15em;border-radius:3px';
+var params = new URLSearchParams(window.location.search);
+var query = params.get('q');
+if (query) {
+  var words = query.trim().split(/\s+/);
+  var textBlock = document.getElementById('act-text');
+  var html = textBlock.innerHTML;
+  words.forEach(function (word) {
+    if (word.length < 2) return;
+    var regex = new RegExp(word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+    html = html.replace(regex, '<mark style="' + MARK_STYLE + '">$&</mark>');
+  });
+  textBlock.innerHTML = html;
+}
+</script>
+</body>
+</html>
