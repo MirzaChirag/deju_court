@@ -9,7 +9,7 @@ import os
 import math
 import sqlite3
 
-DB_PATH = '/app/court_acts.db'
+DB_PATH = os.environ.get('DB_PATH', '/app/court_acts.db')
 
 print(f"DB_PATH: {DB_PATH}")
 print(f"Files in /app: {os.listdir('/app')}")
