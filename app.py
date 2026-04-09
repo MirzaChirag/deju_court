@@ -9,8 +9,25 @@ import os
 import math
 import sqlite3
 
+possible_paths = [
+    os.environ.get("DB_PATH", ""),
+    "/app/court_acts.db",
+    "/app/data/court_acts.db",
+    "court_acts.db",
+]
+
+DB_PATH = next(
+    (p for p in possible_paths if p and os.path.exists(p)), "court_acts.db"
+)
+
+print(f"DB_PATH: {DB_PATH}")
+print(f"Files in /app: {os.listdir('/app')}")
+
 from flask import Flask, abort, render_template, request, url_for
 
+import database
+
+database.DB_PATH = DB_PATH
 from database import connect
 
 app = Flask(__name__)
