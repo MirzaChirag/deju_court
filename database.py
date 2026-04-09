@@ -4,10 +4,10 @@
 
 from __future__ import annotations
 
+import os
 import sqlite3
-from pathlib import Path
 
-DB_PATH = Path(__file__).resolve().parent / "court_acts.db"
+DB_PATH = os.environ.get("DB_PATH", "court_acts.db")
 
 FTS_CREATE_SQL = """
 CREATE VIRTUAL TABLE IF NOT EXISTS court_acts_fts

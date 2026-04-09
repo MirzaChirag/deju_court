@@ -6,6 +6,7 @@
 
 from __future__ import annotations
 
+import os
 import sqlite3
 
 from database import DB_PATH, init_fts_schema
